@@ -67,6 +67,12 @@ jobs:
         with:
           name: Nextjs-site
 
+      - name: 🗝️ Set up Azure CLI environment variables
+        run: |
+          export ARM_CLIENT_ID=${{ secrets.AZURE_CREDENTIALS.appId }}
+          export ARM_CLIENT_SECRET=${{ secrets.AZURE_CREDENTIALS.password }}
+          export ARM_TENANT_ID=${{ secrets.AZURE_CREDENTIALS.tenant }}
+
       - name: 🗝️ Azure Login
         uses: azure/login@v1
         with:
