@@ -1,0 +1,40 @@
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: "Production"
+
+    steps:
+      - name: ⬇️ Download artifact from build job
+        uses: actions/download-artifact@v3
+        with:
+          name: Nextjs-site
+
+      - name: 🗝️ Set up Azure CLI environment variables
+        run: |
+          echo "${{ secrets.AZURE_CREDENTIALS }}" > azure-credentials.json
+          export ARM_CLIENT_ID=$(jq -r .appId azure-credentials.json)
+          export ARM_CLIENT_SECRET=$(jq -r .password azure-credentials.json)
+          export ARM_TENANT_ID=$(jq -r .tenant azure-credentials.json)
+
+          echo "ARM_CLIENT_ID: $ARM_CLIENT_ID"
+          echo "ARM_CLIENT_SECRET: $ARM_CLIENT_SECRET"
+          echo "ARM_TENANT_ID: $ARM_TENANT_ID"
+
+      - name: 🔍 Diagnostics
+        run: |
+          ls -al
+          cat azure-credentials.json
+
+      - name: 🚀 Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_APP_SERVICE_NAME }}
+          package: ${{ github.workspace }}/Nextjs-site.zip
+
+      - name: 🧹 Cleanup
+        run: |
+          rm azure-credentials.json
+          rm ${{ github.workspace }}/Nextjs-site.zip
